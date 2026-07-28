@@ -1,0 +1,20 @@
+# Visual Studio temporary files
+.vs/
+**/.vs/
+
+# Visual Studio user settings
+*.user
+*.suo
+
+# .NET build output
+**/bin/
+**/obj/
+
+# React dependencies and builds
+**/node_modules/
+**/dist/
+
+# Local SQLite database files
+*.db
+*.db-shm
+*.db-wal
