@@ -1,11 +1,91 @@
-﻿#root {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
+﻿.app {
+    width: 700px;
+    max-width: 90%;
+    margin: 30px auto;
+    font-family: Arial, sans-serif;
 }
 
-th, td {
-    padding-left: 1rem;
-    padding-right: 1rem;
+h1,
+h2 {
+    color: #222;
+}
+
+.controls {
+    margin-bottom: 20px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 300px;
+}
+
+input {
+    padding: 6px;
+    border: 1px solid #777;
+}
+
+.message {
+    font-weight: bold;
+}
+
+.test-area {
+    width: 100%;
+    height: 200px;
+    padding: 20px;
+    border: 1px solid black;
+    background-color: gray;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+    .test-area.waiting {
+        background-color: red;
+    }
+
+    .test-area.ready {
+        background-color: green;
+    }
+
+    .test-area.finished {
+        background-color: blue;
+    }
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+    .buttons button {
+        padding: 8px 18px;
+        cursor: pointer;
+    }
+
+        .buttons button:disabled {
+            cursor: not-allowed;
+        }
+
+table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid black;
+}
+
+th {
+    background-color: #ddd;
+}
+
+.note {
+    margin-top: 20px;
+    font-size: 14px;
 }

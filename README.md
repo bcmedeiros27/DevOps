@@ -17,3 +17,4 @@ Backend will use ASP.NET and C# to recive and validate the scores, and return le
 -Restart Option
 # Status
 ASP.net and React have been set up. API calls and network options seem to be working at this time. Github is also up and running
+FrontEnd is working with responsive user UI.

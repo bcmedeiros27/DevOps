@@ -1,51 +1,169 @@
-import { useEffect, useState } from 'react';
-import './App.css';
+import { useRef, useState } from "react";
+import "./App.css";
 
 function App() {
-    const [forecasts, setForecasts] = useState();
+    const [playerName, setPlayerName] = useState("");
+    const [status, setStatus] = useState("idle");
+    const [message, setMessage] = useState("Press Start when you are ready.");
+    const [reactionTime, setReactionTime] = useState(null);
+    const [scores, setScores] = useState([]);
 
-    useEffect(() => {
-        populateWeatherData();
-    }, []);
+    const startTime = useRef(0);
+    const timer = useRef(null);
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
+    function startTest() {
+        if (playerName.trim() === "") {
+            setMessage("Enter your name first.");
+            return;
+        }
 
-    return (
-        <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
-        </div>
-    );
-    
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        if (response.ok) {
-            const data = await response.json();
-            setForecasts(data);
+        clearTimeout(timer.current);
+
+        setStatus("waiting");
+        setReactionTime(null);
+        setMessage("Wait for green...");
+
+        timer.current = setTimeout(() => {
+            startTime.current = Date.now();
+            setStatus("ready");
+            setMessage("Click now!");
+        }, 2000);
+    }
+
+    function clickTestArea() {
+        if (status === "idle") {
+            setMessage("Press Start first.");
+            return;
+        }
+
+        if (status === "waiting") {
+            clearTimeout(timer.current);
+            setStatus("idle");
+            setMessage("Too soon! Press Start to try again.");
+            return;
+        }
+
+        if (status === "ready") {
+            const result = Date.now() - startTime.current;
+
+            setReactionTime(result);
+            setStatus("finished");
+            setMessage(`Your reaction time was ${result} milliseconds.`);
+            return;
+        }
+
+        if (status === "finished") {
+            setMessage("Add your score or press Reset to try again.");
+            return;
+        }
+
+        if (status === "submitted") {
+            setMessage("Press Reset to restart.");
         }
     }
+
+    function addScore() {
+        if (reactionTime === null) {
+            setMessage("Complete the test before adding a score.");
+            return;
+        }
+
+        const newScore = {
+            id: Date.now(),
+            name: playerName.trim(),
+            time: reactionTime,
+        };
+
+        const updatedScores = [...scores, newScore];
+
+        updatedScores.sort((first, second) => first.time - second.time);
+
+        setScores(updatedScores);
+        setStatus("submitted");
+        setMessage("Score added. Press Reset to restart.");
+    }
+
+    function resetTest() {
+        clearTimeout(timer.current);
+
+        setStatus("idle");
+        setReactionTime(null);
+        setMessage("Press Start when you are ready.");
+    }
+
+
+    return (
+        <div className="app">
+            <h1>Reaction Scoreboard</h1>
+
+            <p>Test your reaction speed.</p>
+
+            <div className="controls">
+                <label>
+                    Player Name:
+                    <input
+                        type="text"
+                        value={playerName}
+                        onChange={(event) => setPlayerName(event.target.value)}
+                    />
+                </label>
+            </div>
+
+            
+
+            <button
+                className={`test-area ${status}`}
+                type="button"
+                onClick={clickTestArea}
+            >
+                {message}
+            </button>
+
+            <div className="buttons">
+                <button
+                    type="button"
+                    onClick={startTest}
+                    disabled={status === "waiting" || status === "ready"}
+                >
+                    Start
+                </button>
+
+                <button type="button" onClick={resetTest}>
+                    Reset
+                </button>
+
+                <button type="button" onClick={addScore}>
+                    Add Score
+                </button>
+            </div>
+
+            <h2>Scoreboard</h2>
+
+            {scores.length === 0 ? (
+                <p>No scores have been added.</p>
+            ) : (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {scores.map((score, index) => (
+                            <tr key={score.id}>
+                                <td>{index + 1}</td>
+                                <td>{score.name}</td>
+                                <td>{score.time} ms</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
 }
 
 export default App;
