@@ -1,4 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using ScrBoard.Server.Data;
 namespace ScrBoard.Server
+
 {
     public class Program
     {
@@ -8,6 +11,8 @@ namespace ScrBoard.Server
 
             // Add controller support
             builder.Services.AddControllers();
+            builder.Services.AddDbContext<ScoreDbContext>(options =>options.UseSqlite(
+               builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Add Swagger
             builder.Services.AddEndpointsApiExplorer();
