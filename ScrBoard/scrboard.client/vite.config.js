@@ -7,22 +7,22 @@ import path from "path";
 import child_process from "child_process";
 import { env } from "process";
 
-const baseFolder =
-    env.APPDATA !== undefined && env.APPDATA !== ""
-        ? `${env.APPDATA}/ASP.NET/https`
-        : `${env.HOME}/.aspnet/https`;
+function getHttpsConfig() {
+    const baseFolder =
+        env.APPDATA !== undefined && env.APPDATA !== ""
+            ? `${env.APPDATA}/ASP.NET/https`
+            : `${env.HOME}/.aspnet/https`;
 
-const certificateName = "scrboard.client";
-const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
-const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
+    const certificateName = "scrboard.client";
+    const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
+    const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
 
-if (!fs.existsSync(baseFolder)) {
-    fs.mkdirSync(baseFolder, { recursive: true });
-}
+    if (!fs.existsSync(baseFolder)) {
+        fs.mkdirSync(baseFolder, { recursive: true });
+    }
 
-if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-    if (
-        child_process.spawnSync(
+    if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
+        const result = child_process.spawnSync(
             "dotnet",
             [
                 "dev-certs",
@@ -34,10 +34,17 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
                 "--no-password",
             ],
             { stdio: "inherit" }
-        ).status !== 0
-    ) {
-        throw new Error("Could not create certificate.");
+        );
+
+        if (result.status !== 0) {
+            throw new Error("Could not create certificate.");
+        }
     }
+
+    return {
+        key: fs.readFileSync(keyFilePath),
+        cert: fs.readFileSync(certFilePath),
+    };
 }
 
 const target = env.ASPNETCORE_HTTPS_PORT
@@ -46,9 +53,8 @@ const target = env.ASPNETCORE_HTTPS_PORT
         ? env.ASPNETCORE_URLS.split(";")[0]
         : "https://localhost:7205";
 
-// https://vitejs.dev/config/
-export default defineConfig({
-    base: "/DevOps/",
+export default defineConfig(({ command }) => ({
+    base: env.VITE_BASE || (command === "build" ? "/DevOps/" : "/"),
 
     plugins: [plugin()],
 
@@ -68,9 +74,7 @@ export default defineConfig({
 
         port: parseInt(env.DEV_SERVER_PORT || "51281"),
 
-        https: {
-            key: fs.readFileSync(keyFilePath),
-            cert: fs.readFileSync(certFilePath),
-        },
+
+        https: command === "serve" ? getHttpsConfig() : undefined,
     },
-});
+}));
