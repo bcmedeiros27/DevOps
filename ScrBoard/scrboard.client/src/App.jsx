@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import "./App.css";
+import { sortScores } from "./utils/scoreUtils";
 
 function App() {
     const [playerName, setPlayerName] = useState("");
@@ -76,9 +77,8 @@ function App() {
 
         const updatedScores = [...scores, newScore];
 
-        updatedScores.sort((first, second) => first.time - second.time);
+        setScores(sortScores(updatedScores));
 
-        setScores(updatedScores);
         setStatus("submitted");
         setMessage("Score added. Press Reset to restart.");
     }
