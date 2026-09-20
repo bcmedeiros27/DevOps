@@ -1,0 +1,83 @@
+name: Deploy ScrBoard
+
+on:
+  workflow_run:
+    workflows:
+      - ScrBoard CI
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+
+    env:
+      DEPLOY_HOST: 38.46.230.15
+      DEPLOY_USER: bmedeiros
+      DEPLOY_SSH_PORT: 22
+      DEPLOY_PATH: /home/bmedeiros/DevOps
+
+      FRONTEND_PORT: 88
+
+    steps:
+      - name: Checkout Successful Commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Install SSH Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass rsync
+
+      - name: Add Server To Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$DEPLOY_SSH_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Create Deployment Directory
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_PASSWORD }}
+        run: |
+          sshpass -e ssh \
+            -p "$DEPLOY_SSH_PORT" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "mkdir -p '$DEPLOY_PATH'"
+
+      - name: Copy Application To Server
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_PASSWORD }}
+        run: |
+          sshpass -e rsync \
+            -avz \
+            --delete \
+            -e "ssh -p $DEPLOY_SSH_PORT" \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude ".vs" \
+            --exclude "node_modules" \
+            --exclude "bin" \
+            --exclude "obj" \
+            ./ \
+            "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+
+      - name: Deploy Docker Containers
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_PASSWORD }}
+          SUDO_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+        run: |
+          printf '%s\n' "$SUDO_PASSWORD" | \
+          sshpass -e ssh \
+            -p "$DEPLOY_SSH_PORT" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "sudo -S -p '' bash -c '
+              cd \"$DEPLOY_PATH\" &&
+              FRONTEND_PORT=\"$FRONTEND_PORT\" docker compose down &&
+              FRONTEND_PORT=\"$FRONTEND_PORT\" docker compose up -d --build &&
+              docker compose ps
+            '"
