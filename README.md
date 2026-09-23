@@ -20,3 +20,4 @@ ASP.net and React have been set up. API calls and network options seem to be wor
 FrontEnd is working with responsive user UI.
 # IN CLASS1
 Test of in clas push&build
+# In class2
