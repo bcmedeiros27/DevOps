@@ -18,3 +18,5 @@ Backend will use ASP.NET and C# to recive and validate the scores, and return le
 # Status
 ASP.net and React have been set up. API calls and network options seem to be working at this time. Github is also up and running
 FrontEnd is working with responsive user UI.
+# IN CLASS1
+Test of in clas push&build
